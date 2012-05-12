@@ -1,0 +1,4 @@
+/Users/Alex/Projects/AlexTouch.Mobclix/AlexTouch.Mobclix/bin/Debug/AlexTouch.Mobclix.dll.mdb
+/Users/Alex/Projects/AlexTouch.Mobclix/AlexTouch.Mobclix/bin/Debug/AlexTouch.Mobclix.dll
+/Users/Alex/Projects/AlexTouch.Mobclix/AlexTouch.Mobclix/obj/Debug/AlexTouch.Mobclix.dll
+/Users/Alex/Projects/AlexTouch.Mobclix/AlexTouch.Mobclix/obj/Debug/AlexTouch.Mobclix.dll.mdb
