@@ -1,8 +1,8 @@
 using System;
 using System.Runtime.InteropServices;
 
-//namespace AlexTouch.Mobclix
-//{
+namespace AlexTouch.Mobclix
+{
 	public enum MCBrowserStyle
 	{
 		Toolbar, // Toolbar with back/forward/reload buttons, no navigation bar
@@ -10,23 +10,24 @@ using System.Runtime.InteropServices;
 		Widget, // No toolbar, No Navigation bar, Single "X" in top left corner
 		Full // Contains toolbar and navigation bar. 
 	}
-	
+
+	[Flags]
 	public enum MCLogLevel
 	{
-		LOG_LEVEL_VERBOSE =	1 << 0,
-		LOG_LEVEL_DEBUG =	1 << 1,
-		LOG_LEVEL_INFO	=	1 << 2,
-		LOG_LEVEL_WARN	=	1 << 3,
-		LOG_LEVEL_ERROR	=	1 << 4
+		Verbose =	1,
+		Debug 	=	2,
+		Info	=	4,
+		Warn	=	8,
+		Error	=	16
 	}
 	
 	public enum MCAdsError
 	{
-		UnknownError = 0,
-		ServerError = -500,
-		Unavailable = -503,
-		NotStarted = -8888888,
-		Disabled = -9999999
+		Unknown			= 0,
+		ServerError		= -500,
+		Unavailable		= -503,
+		NotStarted		= -8888888,
+		Disabled		= -9999999
 	}
 	
 	public enum MCAdsSuballocationType
@@ -87,7 +88,8 @@ using System.Runtime.InteropServices;
 		SingleUnavailable,
 		MaritalMarried	
 	}
-	
+
+	[StructLayout(LayoutKind.Sequential)]
 	public struct MCDemographics
 	{
 		public MCDemographicsEducation education;
@@ -117,7 +119,8 @@ using System.Runtime.InteropServices;
 		VeryGood,
 		Excellent	
 	}
-	
+
+	[StructLayout(LayoutKind.Sequential)]
 	public struct MCFeedbackRatings
 	{
 		public MCFeedbackRating categoryA;
@@ -128,4 +131,4 @@ using System.Runtime.InteropServices;
 	}
 	
 	
-//}
+}

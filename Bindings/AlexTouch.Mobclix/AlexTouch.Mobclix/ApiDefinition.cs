@@ -8,68 +8,13 @@ using MonoTouch.CoreLocation;
 
 namespace AlexTouch.Mobclix
 {
-	// The first step to creating a binding is to add your native library ("libNativeLibrary.a")
-	// to the project by right-clicking (or Control-clicking) the folder containing this source
-	// file and clicking "Add files..." and then simply select the native library (or libraries)
-	// that you want to bind.
-	//
-	// When you do that, you'll notice that MonoDevelop generates a code-behind file for each
-	// native library which will contain a [LinkWith] attribute. MonoDevelop auto-detects the
-	// architectures that the native library supports and fills in that information for you,
-	// however, it cannot auto-detect any Frameworks or other system libraries that the
-	// native library may depend on, so you'll need to fill in that information yourself.
-	//
-	// Once you've done that, you're ready to move on to binding the API...
-	//
-	//
-	// Here is where you'd define your API definition for the native Objective-C library.
-	//
-	// For example, to bind the following Objective-C class:
-	//
-	//     @interface Widget : NSObject {
-	//     }
-	//
-	// The C# binding would look like this:
-	//
-	//     [BaseType (typeof (NSObject))]
-	//     interface Widget {
-	//     }
-	//
-	// To bind Objective-C properties, such as:
-	//
-	//     @property (nonatomic, readwrite, assign) CGPoint center;
-	//
-	// You would add a property definition in the C# interface like so:
-	//
-	//     [Export ("center")]
-	//     PointF Center { get; set; }
-	//
-	// To bind an Objective-C method, such as:
-	//
-	//     -(void) doSomething:(NSObject *)object atIndex:(NSInteger)index;
-	//
-	// You would add a method definition to the C# interface like so:
-	//
-	//     [Export ("doSomething:atIndex:")]
-	//     void DoSomething (NSObject object, int index);
-	//
-	// Objective-C "constructors" such as:
-	//
-	//     -(id)initWithElmo:(ElmoMuppet *)elmo;
-	//
-	// Can be bound as:
-	//
-	//     [Export ("initWithElmo:")]
-	//     IntPtr Constructor (ElmoMuppet elmo);
-	//
-	// For more information, see http://docs.xamarin.com/ios/advanced_topics/binding_objective-c_types
-	//
-	
-	[BaseType (typeof (UIViewController))]
+	[BaseType (typeof (UIViewController),
+	Delegates=new string [] {"WeakDelegate"},
+	Events=new Type [] { typeof (MCBrowserViewControllerDelegate) })]
     interface MCBrowserViewController
 	{
 		[Export ("initWithURLRequest:")]
-	    IntPtr Constructor (NSUrlRequest urlRequest);
+		IntPtr Constructor (NSUrlRequest urlRequest);
 		
 		[Export ("initWithURLRequest:browserStyle:")]
 	    IntPtr Constructor (NSUrlRequest urlRequest, MCBrowserStyle browserStyle);
@@ -97,30 +42,23 @@ namespace AlexTouch.Mobclix
 		
 		[Export ("autoDismissOnResignActive", ArgumentSemantic.Assign)]
 		bool AutoDismissOnResignActive { get; set; }
+
+		[Field ("MCBrowserWillShowNotification", "__Internal")]
+		NSString MCBrowserWillShowNotification { get; }
+		
+		[Field ("MCBrowserDidHideNotification", "__Internal")]
+		NSString MCBrowserDidHideNotification { get; }
 	}
 	
 	[BaseType (typeof (NSObject))]
 	[Model]
 	interface MCBrowserViewControllerDelegate 
 	{
-		[Export ("browserViewControllerFinishedPreloading:")]
-		void BrowserViewControllerFinishedPreloading (MCBrowserViewController browserViewController);
+		[Export ("browserViewControllerFinishedPreloading:"), EventArgs ("MCBrowserViewControllerDelegateFinishedPreloading")]
+		void FinishedPreloading (MCBrowserViewController browserViewController);
 		
-		[Export ("browserViewController:failedToPreloadWithError:")]
-		void BrowserViewControllerFailedToPreloadWithError (MCBrowserViewController browserViewController, NSError error);
-	}
-	
-	[Static]
-	interface MCNotifications 
-	{
-    	[Field ("MCBrowserWillShowNotification", "__Internal")]
-    	NSString MCBrowserWillShowNotification { get; }
-		
-		[Field ("MCBrowserDidHideNotification", "__Internal")]
-    	NSString MCBrowserDidHideNotification { get; }
-		
-		[Field ("MCAdsErrorDomain", "__Internal")]
-    	NSString MCAdsErrorDomain { get; }
+		[Export ("browserViewController:failedToPreloadWithError:"), EventArgs ("MCBrowserViewControllerDelegateFailedToPreload")]
+		void FailedToPreload (MCBrowserViewController browserViewController, NSError error);
 	}
 	
 	[BaseType (typeof (NSObject))]
@@ -136,10 +74,15 @@ namespace AlexTouch.Mobclix
 	    void UpdateLocation (CLLocation locaion);
 		
 		[Static, Export ("isApplicationCracked")]
-	    bool IsApplicationCracked ();
+		bool IsApplicationCracked { get; }
+
+		[Static, Export ("version")]
+		string Version { get; }
 	}
 	
-	[BaseType (typeof (UIView))]
+	[BaseType (typeof (UIView),
+	Delegates=new string [] {"WeakDelegate"},
+	Events=new Type [] { typeof (MobclixAdViewDelegate) })]
     interface MobclixAdView
 	{	
 		[Export ("getAd")]
@@ -168,6 +111,9 @@ namespace AlexTouch.Mobclix
 		
 		[Export ("viewController", ArgumentSemantic.Assign)]
 		UIViewController ViewController { get; set; }
+
+		[Field ("MCAdsErrorDomain", "__Internal")]
+		NSString MCAdsErrorDomain { get; }
 	}
 	
 	[BaseType (typeof (MobclixAdView))]
@@ -210,44 +156,42 @@ namespace AlexTouch.Mobclix
 	[Model]
 	interface MobclixAdViewDelegate 
 	{
-		[Export ("adViewDidFinishLoad:")]
-		void AdViewDidFinishLoad (MobclixAdView adView);
+		[Export ("adViewDidFinishLoad:"), EventArgs ("MobclixAdViewDelegateParams")]
+		void DidFinishLoad (MobclixAdView adView);
 		
-		[Export ("adView:didFailLoadWithError:")]
-		void AdViewDidFailLoadWithError (MobclixAdView adView, NSError error);
+		[Export ("adView:didFailLoadWithError:"), EventArgs ("MobclixAdViewDelegateDidFailLoad")]
+		void DidFailLoad (MobclixAdView adView, NSError error);
 		
-		[Export ("adViewCanAutoplay:")]
-		bool AdViewCanAutoplay (MobclixAdView adView);
+		[Export ("adViewCanAutoplay:"), DelegateName("MobclixAdViewDelegateAdDel"), DefaultValue(true)]
+		bool CanAutoplay (MobclixAdView adView);
 		
-		[Export ("richMediaRequiresUserInteraction:")]
+		[Export ("richMediaRequiresUserInteraction:"), DelegateName("MobclixAdViewDelegateAdDel"), DefaultValue(false)]
 		bool RichMediaRequiresUserInteraction (MobclixAdView adView);
 		
-		[Export ("adView:shouldHandleSuballocationRequest:")]
-		bool AdViewShouldHandleSuballocationRequest (MobclixAdView adView, MCAdsSuballocationType suballocationType);
+		[Export ("adView:shouldHandleSuballocationRequest:"), DelegateName("MobclixAdViewDelegateAdViewSuballocationType"), DefaultValue(true)]
+		bool ShouldHandleSuballocationRequest (MobclixAdView adView, MCAdsSuballocationType suballocationType);
 		
-		[Export ("adView:didReceiveSuballocationRequest:")]
-		void AdViewDidReceiveSuballocationRequest (MobclixAdView adView, MCAdsSuballocationType suballocationType);
+		[Export ("adView:didReceiveSuballocationRequest:"), EventArgs ("MobclixAdViewDelegateAdSuballocationType")]
+		void DidReceiveSuballocationRequest (MobclixAdView adView, MCAdsSuballocationType suballocationType);
 		
-		[Export ("adView:publisherKeyForSuballocationRequest:")]
-		string AdViewPublisherKeyForSuballocationRequest (MobclixAdView adView, MCAdsSuballocationType suballocationType);
+		[Export ("adView:publisherKeyForSuballocationRequest:"), DelegateName("MobclixAdViewDelegatePublisherKeyForSuballocationRequest"), DefaultValue(null)]
+		string PublisherKeyForSuballocationRequest (MobclixAdView adView, MCAdsSuballocationType suballocationType);
 		
-		[Export ("adViewWillTouchThrough:")]
-		void AdViewWillTouchThrough (MobclixAdView adView);
+		[Export ("adViewWillTouchThrough:"), EventArgs ("MobclixAdViewDelegateParams")]
+		void WillTouchThrough (MobclixAdView adView);
 		
-		[Export ("adViewDidFinishTouchThrough:")]
-		void AdViewDidFinishTouchThrough (MobclixAdView adView);
+		[Export ("adViewDidFinishTouchThrough:"), EventArgs ("MobclixAdViewDelegateParams")]
+		void DidFinishTouchThrough (MobclixAdView adView);
 		
-		[Export ("adView:didTouchCustomAdWithString:")]
-		void AdViewDidTouchCustomAdWithString (MobclixAdView adView , string text);
+		[Export ("adView:didTouchCustomAdWithString:"), EventArgs ("MobclixAdViewDelegateDidTouchCustomAd")]
+		void DidTouchCustomAd (MobclixAdView adView , string text);
 		
-		[Export ("mcKeywords")]
-		string McKeywords ();
+		[Export ("mcKeywords"), DelegateName("MobclixAdViewDelegateKeyQuery"), DefaultValue(null)]
+		string McKeywords (bool fakeArg);
 		
-		[Export ("query")]
-		string Query ();
+		[Export ("query"), DelegateName("MobclixAdViewDelegateKeyQuery"), DefaultValue(null)]
+		string Query (bool fakeArg);
 	}
-	
-	//---------------- Beta Code
 	
 	[BaseType (typeof (NSObject))]
     interface MobclixDemographics
@@ -256,13 +200,15 @@ namespace AlexTouch.Mobclix
 	    void UpdateDemographicsBirthday (MCDemographics demographics, NSDate birthday);
 		
 		[Static, Export ("demographics")]
-	    MCDemographics Demographics ();
+		MCDemographics Demographics { get; }
 		
 		[Static, Export ("birthday")]
-	    NSDate Birthday ();
+		NSDate Birthday { get; }
 	}
 	
-	[BaseType (typeof (NSObject))]
+	[BaseType (typeof (NSObject),
+	Delegates=new string [] {"WeakDelegate"},
+	Events=new Type [] { typeof (MobclixFeedbackDelegate) })]
     interface MobclixFeedback
 	{	
 		[Export ("sendComment:")]
@@ -295,22 +241,22 @@ namespace AlexTouch.Mobclix
 	[Model]
 	interface MobclixFeedbackDelegate 
 	{
-		[Export ("mobclixFeedbackSentComment:")]
-		void MobclixFeedbackSentComment (MobclixFeedback feedback);
+		[Export ("mobclixFeedbackSentComment:"), EventArgs ("MobclixFeedbackDelegateArgs")]
+		void SentComment (MobclixFeedback feedback);
 		
-		[Export ("MobclixFeedbackFailedToSendComment:withError:")]
-		void MobclixFeedbackFailedToSendComment (MobclixFeedback feedback, NSError error);
+		[Export ("MobclixFeedbackFailedToSendComment:withError:"), EventArgs ("MobclixFeedbackDelegateErrorArgs")]
+		void FailedToSendComment (MobclixFeedback feedback, NSError error);
 		
-		[Export ("mobclixFeedbackSentRatings:")]
-		void MobclixFeedbackSentRatings (MobclixFeedback feedback);
+		[Export ("mobclixFeedbackSentRatings:"), EventArgs ("MobclixFeedbackDelegateArgs")]
+		void SentRatings (MobclixFeedback feedback);
 		
-		[Export ("mobclixFeedbackFailedToSendRatings:withError:")]
-		void MobclixFeedbackFailedToSendRatings (MobclixFeedback feedback, NSError error);
+		[Export ("mobclixFeedbackFailedToSendRatings:withError:"), EventArgs ("MobclixFeedbackDelegateErrorArgs")]
+		void FailedToSendRatings (MobclixFeedback feedback, NSError error);
 	}
 	
-	//------------- End Beta Code
-	
-	[BaseType (typeof (UIViewController))]
+	[BaseType (typeof (UIViewController),
+	Delegates=new string [] {"WeakDelegate"},
+	Events=new Type [] { typeof (MobclixFullScreenAdDelegate) })]
     interface MobclixFullScreenAdViewController
 	{	
 		[Export ("requestAd")]
@@ -337,17 +283,17 @@ namespace AlexTouch.Mobclix
 	[Model]
 	interface MobclixFullScreenAdDelegate 
 	{
-		[Export ("fullScreenAdViewControllerDidFinishLoad:")]
-		void FullScreenAdViewControllerDidFinishLoad (MobclixFullScreenAdViewController fullScreenAdViewController);
+		[Export ("fullScreenAdViewControllerDidFinishLoad:"), EventArgs ("MobclixFullScreenAdDelegateArgs")]
+		void DidFinishLoad (MobclixFullScreenAdViewController fullScreenAdViewController);
 		
-		[Export ("fullScreenAdViewController:didFailToLoadWithError:")]
-		void FullScreenAdViewController (MobclixFullScreenAdViewController fullScreenAdViewController, NSError error);
+		[Export ("fullScreenAdViewController:didFailToLoadWithError:"), EventArgs ("MobclixFullScreenAdDelegateError")]
+		void DidFailToLoad (MobclixFullScreenAdViewController fullScreenAdViewController, NSError error);
 		
-		[Export ("fullScreenAdViewControllerWillPresentAd:")]
-		void FullScreenAdViewControllerWillPresentAd (MobclixFullScreenAdViewController fullScreenAdViewController);
+		[Export ("fullScreenAdViewControllerWillPresentAd:"), EventArgs ("MobclixFullScreenAdDelegateArgs")]
+		void WillPresentAd (MobclixFullScreenAdViewController fullScreenAdViewController);
 		
-		[Export ("fullScreenAdViewControllerDidDismissAd:")]
-		void FullScreenAdViewControllerDidDismissAd (MobclixFullScreenAdViewController fullScreenAdViewController);
+		[Export ("fullScreenAdViewControllerDidDismissAd:"), EventArgs ("MobclixFullScreenAdDelegateArgs")]
+		void DidDismissAd (MobclixFullScreenAdViewController fullScreenAdViewController);
 	}
 	
 }
